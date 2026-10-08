@@ -1,4 +1,3 @@
-
 package com.pruthviraj.virtual_casino.controller;
 
 import com.pruthviraj.virtual_casino.dto.LoginRequest;
@@ -14,6 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -112,5 +112,29 @@ public class UserController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    // Protected endpoint - requires JWT token
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(
+            Authentication authentication) {
+
+        String username = authentication.getName();
+
+        var userOptional =
+                userRepository.findByUsername(username);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found");
+        }
+
+        User user = userOptional.get();
+
+        return ResponseEntity.ok(
+                "Welcome " + user.getUsername()
+                        + ", your virtual coins are "
+                        + user.getVirtualCoins()
+        );
     }
 }
